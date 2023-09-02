@@ -1,6 +1,8 @@
 @file:Suppress("UnstableApiUsage")
 
 pluginManagement {
+    includeBuild("build-logic")
+
     repositories {
         google()
         mavenCentral()
@@ -17,3 +19,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "hyphen-android-sdk"
 include(":sample")
+include(":core")
