@@ -30,6 +30,7 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
                 // "implementation"(libs.findLibrary("timber").get())
                 "implementation"(libs.findBundle("coroutines").get())
                 "implementation"(libs.findLibrary("atomicfu").get())
+                "implementation"(libs.findLibrary("androidx-security").get())
                 // "implementation"(libs.findLibrary("kotlin-immutable").get())
             }
         }
