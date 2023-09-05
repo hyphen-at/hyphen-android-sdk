@@ -27,7 +27,7 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
             val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
             dependencies {
-                // "implementation"(libs.findLibrary("timber").get())
+                "implementation"(libs.findLibrary("timber").get())
                 "implementation"(libs.findBundle("coroutines").get())
                 "implementation"(libs.findLibrary("atomicfu").get())
                 "implementation"(libs.findLibrary("androidx-security").get())
