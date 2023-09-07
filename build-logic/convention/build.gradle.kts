@@ -32,5 +32,9 @@ gradlePlugin {
             id = "hyphen.sdk.kotlin.serialization"
             implementationClass = "AndroidSerializationConventionPlugin"
         }
+        register("androidFirebase") {
+            id = "hyphen.sdk.firebase"
+            implementationClass = "AndroidFirebaseConventionPlugin"
+        }
     }
 }

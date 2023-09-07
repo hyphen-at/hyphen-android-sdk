@@ -4,12 +4,12 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class HyphenRequestEditDevice(
-    val id: String?,
-    val pushToken: String?,
-    val name: String?,
-    val osName: String?,
-    val osVersion: String?,
-    val deviceManufacturer: String?,
-    val deviceModel: String?,
-    val lang: String?,
+    val id: String? = null,
+    val pushToken: String? = null,
+    val name: String? = null,
+    val osName: String? = null,
+    val osVersion: String? = null,
+    val deviceManufacturer: String? = null,
+    val deviceModel: String? = null,
+    val lang: String? = null,
 )

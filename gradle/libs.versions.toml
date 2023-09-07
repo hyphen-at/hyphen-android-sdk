@@ -52,6 +52,7 @@ compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = 
 
 # AndroidX
 androidx-core = "androidx.core:core-ktx:1.10.1"
+androidx-activity = "androidx.activity:activity-ktx:1.7.2"
 androidx-lifecycle = "androidx.lifecycle:lifecycle-runtime-ktx:2.6.1"
 androidx-viewmodel = "androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1"
 androidx-browser = "androidx.browser:browser:1.6.0"
@@ -76,6 +77,9 @@ sandwich = { module = "com.github.skydoves:sandwich", version.ref = "sandwich" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase" }
 firebase-authenticate = { module = "com.google.firebase:firebase-auth-ktx" }
 firebase-messaging = { module = "com.google.firebase:firebase-messaging-ktx" }
+
+# Google Play Services
+play-services-auth = "com.google.android.gms:play-services-auth:20.7.0"
 
 # atomicfu
 atomicfu = { module = "org.jetbrains.kotlinx:atomicfu", version.ref = "atomicfu" }

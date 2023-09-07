@@ -1,8 +1,8 @@
 package at.hyphen.android.sdk.core.eventbus
 
+import kotlin.reflect.KClass
 import kotlinx.atomicfu.atomic
 import kotlinx.atomicfu.getAndUpdate
-import kotlin.reflect.KClass
 
 typealias Observer = (Any) -> Unit
 
@@ -29,7 +29,7 @@ object HyphenEventBus {
         observe(T::class, obs)
     }
 
-    fun <T : Any> removeObserver(clazz: KClass<T>, obs: (T) -> Unit) {
+    fun <T : Any> removeObserver(clazz: KClass<T>) {
         observers.getAndUpdate { cur ->
             cur.toMutableMap().also { upd ->
                 upd.remove(clazz)

@@ -11,4 +11,5 @@ dependencies {
     implementation(projects.core)
 
     implementation(libs.bundles.networking)
+    api(libs.sandwich)
 }
