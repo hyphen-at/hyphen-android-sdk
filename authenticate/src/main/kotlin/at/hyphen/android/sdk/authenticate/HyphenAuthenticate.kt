@@ -67,7 +67,7 @@ object HyphenAuthenticate {
 
             HyphenCryptography.generateKey()
 
-            requestSignIn2FA(context = activity, idToken = idToken, userKey = getHyphenUserKey(activity))
+            requestSignIn2FA(idToken = idToken, userKey = getHyphenUserKey(activity))
         } else {
             Timber.tag("HyphenSDK").i("Request authenticate challenge...")
             val userKey = getHyphenUserKey(activity)
@@ -100,7 +100,7 @@ object HyphenAuthenticate {
                 Hyphen.saveCredential(challengeRespondRequest.credentials)
             } catch (e: Exception) {
                 Timber.tag("HyphenSDK").e("Request challenge failed. Attempting 2FA request for another device...")
-                requestSignIn2FA(context = activity, idToken = idToken, userKey = userKey)
+                requestSignIn2FA(idToken = idToken, userKey = userKey)
             }
         }
     }
@@ -118,7 +118,7 @@ object HyphenAuthenticate {
         Timber.tag("HyphenSDK").i("Update device information successfully.")
     }
 
-    private suspend fun requestSignIn2FA(context: Context, idToken: String, userKey: HyphenUserKey) {
+    private suspend fun requestSignIn2FA(idToken: String, userKey: HyphenUserKey) {
         Timber.tag("HyphenSDK").i("Request Hyphen 2FA authenticate...")
 
         HyphenNetworking.Auth.signIn2FA(
