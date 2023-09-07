@@ -19,5 +19,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "hyphen-android-sdk"
 include(":sample")
+include(":authenticate")
 include(":core")
+include(":deviceinfo")
 include(":networking")
