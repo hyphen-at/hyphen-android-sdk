@@ -2,24 +2,25 @@
 
 pluginManagement {
     includeBuild("build-logic")
-
     repositories {
         google()
         mavenCentral()
         gradlePluginPortal()
     }
 }
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
     repositories {
         google()
         mavenCentral()
     }
 }
-
 rootProject.name = "hyphen-android-sdk"
-include(":sample")
-include(":authenticate")
-include(":core")
-include(":deviceinfo")
-include(":networking")
+include(
+    ":sample",
+    ":core",
+    ":authenticate",
+    ":deviceinfo",
+    ":networking",
+)

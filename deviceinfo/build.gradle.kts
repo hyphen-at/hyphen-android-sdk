@@ -1,5 +1,6 @@
 plugins {
-    id("hyphen.sdk.android.library")
+    id("hyphen.sdk.android")
+    id("hyphen.sdk.android.kotlin")
 }
 
 android {

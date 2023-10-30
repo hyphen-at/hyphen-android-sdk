@@ -1,6 +1,7 @@
 plugins {
-    id("hyphen.sdk.android.library")
-    id("hyphen.sdk.firebase")
+    id("hyphen.sdk.android")
+    id("hyphen.sdk.android.kotlin")
+
 }
 
 android {
@@ -11,5 +12,8 @@ dependencies {
     implementation(projects.core)
     implementation(projects.deviceinfo)
     implementation(projects.networking)
-    implementation(libs.androidx.activity)
+    //implementation(libs.androidx.activity)
+
+    platform(libs.firebaseBom)
+    implementation(libs.firebaseAuth)
 }

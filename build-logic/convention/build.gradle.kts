@@ -18,23 +18,34 @@ tasks.withType<KotlinCompile>().configureEach {
 }
 
 dependencies {
-    compileOnly(libs.plugin.androidBuildTools)
-    compileOnly(libs.plugin.kotlin)
+    implementation(libs.bundles.plugins)
 }
 
 gradlePlugin {
     plugins {
-        register("androidLibrary") {
-            id = "hyphen.sdk.android.library"
-            implementationClass = "AndroidLibraryConventionPlugin"
+        register("androidApplication") {
+            id = "hyphen.sdk.android.application"
+            implementationClass = "AndroidApplicationPlugin"
         }
-        register("androidKotlinSerialization") {
-            id = "hyphen.sdk.kotlin.serialization"
-            implementationClass = "AndroidSerializationConventionPlugin"
+        register("android") {
+            id = "hyphen.sdk.android"
+            implementationClass = "AndroidPlugin"
+        }
+        register("androidKotlin") {
+            id = "hyphen.sdk.android.kotlin"
+            implementationClass = "AndroidKotlinPlugin"
+        }
+        register("androidCompose") {
+            id = "hyphen.sdk.android.compose"
+            implementationClass = "AndroidComposePlugin"
         }
         register("androidFirebase") {
-            id = "hyphen.sdk.firebase"
-            implementationClass = "AndroidFirebaseConventionPlugin"
+            id = "hyphen.sdk.android.firebase"
+            implementationClass = "AndroidFirebasePlugin"
+        }
+        register("kotlinMppKotlinSerialization") {
+            id = "hyphen.sdk.serialization"
+            implementationClass = "KotlinSerializationPlugin"
         }
     }
 }

@@ -1,17 +1,19 @@
 @Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
-    alias(libs.plugins.com.android.application)
-    alias(libs.plugins.org.jetbrains.kotlin.android)
+    id("hyphen.sdk.android.application")
+    id("hyphen.sdk.android.kotlin")
+    id("hyphen.sdk.android.compose")
+    id("hyphen.sdk.android.firebase")
 }
 
 android {
-    namespace = "at.hyphen.android.sdk"
-    compileSdk = 33
+    namespace = "at.hyphen.android.sdk.sample"
+    compileSdk = 34
 
     defaultConfig {
-        applicationId = "at.hyphen.android.sdk"
+        applicationId = "at.hyphen.android.sdk.sample"
         minSdk = 26
-        targetSdk = 33
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -28,17 +30,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "1.8"
-    }
-    buildFeatures {
-        compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.3"
+        jvmTarget = JavaVersion.VERSION_17.toString()
     }
     packaging {
         resources {
@@ -48,20 +44,7 @@ android {
 }
 
 dependencies {
-
-//    implementation(libs.)
-//    implementation(libs.lifecycle.runtime.ktx)
-//    implementation(libs.activity.compose)
-//    implementation(platform(libs.compose.bom))
-//    implementation(libs.ui)
-//    implementation(libs.ui.graphics)
-//    implementation(libs.ui.tooling.preview)
-//    implementation(libs.material3)
-//    testImplementation(libs.junit)
-//    androidTestImplementation(libs.androidx.test.ext.junit)
-//    androidTestImplementation(libs.espresso.core)
-//    androidTestImplementation(platform(libs.compose.bom))
-//    androidTestImplementation(libs.ui.test.junit4)
-//    debugImplementation(libs.ui.tooling)
-//    debugImplementation(libs.ui.test.manifest)
+    implementation(project(":core"))
+    implementation(project(":authenticate"))
+    implementation(project(":networking"))
 }

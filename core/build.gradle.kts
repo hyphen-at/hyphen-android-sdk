@@ -1,6 +1,8 @@
 plugins {
-    id("hyphen.sdk.android.library")
-    id("hyphen.sdk.kotlin.serialization")
+    id("hyphen.sdk.serialization")
+    id("hyphen.sdk.android")
+    id("hyphen.sdk.android.kotlin")
+    id("hyphen.sdk.android.firebase")
 }
 
 android {
