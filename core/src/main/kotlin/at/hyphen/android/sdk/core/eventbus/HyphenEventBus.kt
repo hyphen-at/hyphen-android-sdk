@@ -1,47 +1,29 @@
 package at.hyphen.android.sdk.core.eventbus
 
-import kotlin.reflect.KClass
-import kotlinx.atomicfu.atomic
-import kotlinx.atomicfu.getAndUpdate
+import androidx.annotation.RestrictTo
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
 
-typealias Observer = (Any) -> Unit
-
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 object HyphenEventBus {
-    private val observers = atomic(mutableMapOf<KClass<out Any>, List<Observer>>())
+    private val eventBus = EventBus.builder().build()
+    private var onEventReceived: ((HyphenEventBusType) -> Unit)? = null
 
-    fun <T : Any> observe(clazz: KClass<T>, obs: (T) -> Unit) {
-        if (!observers.value.containsKey(clazz)) {
-            observers.getAndUpdate { cur ->
-                cur.toMutableMap().also { upd ->
-                    upd[clazz] = listOf(obs as Observer)
-                }
-            }
-        } else {
-            observers.getAndUpdate { cur ->
-                cur.toMutableMap().also { upd ->
-                    upd[clazz] = upd[clazz]!! + listOf(obs as Observer)
-                }
-            }
-        }
+    internal fun initialize() {
+        eventBus.register(this)
     }
 
-    inline fun <reified T : Any> observe(noinline obs: (T) -> Unit) {
-        observe(T::class, obs)
+    fun post(event: HyphenEventBusType) {
+        eventBus.post(event)
     }
 
-    fun <T : Any> removeObserver(clazz: KClass<T>) {
-        observers.getAndUpdate { cur ->
-            cur.toMutableMap().also { upd ->
-                upd.remove(clazz)
-            }
-        }
+    @Suppress("unused")
+    @Subscribe
+    internal fun onHyphenEventReceived(event: HyphenEventBusType) {
+        onEventReceived?.invoke(event)
     }
 
-    fun <T : Any> post(clazz: KClass<T>, event: T) {
-        observers.value[clazz]?.forEach { it.invoke(event) }
-    }
-
-    inline fun <reified T : Any> post(event: T) {
-        post(T::class, event)
+    fun observe(callback: (HyphenEventBusType) -> Unit) {
+        onEventReceived = callback
     }
 }
