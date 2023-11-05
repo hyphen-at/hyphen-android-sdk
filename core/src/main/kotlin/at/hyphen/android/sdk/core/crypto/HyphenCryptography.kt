@@ -12,12 +12,17 @@ import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.PublicKey
 import java.security.Signature
+import java.security.interfaces.ECKey
 import java.security.interfaces.ECPublicKey
 import java.security.spec.ECGenParameterSpec
 import java.util.concurrent.Executor
 import javax.crypto.Cipher
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @SuppressLint("StaticFieldLeak")
 object HyphenCryptography {
@@ -74,10 +79,12 @@ object HyphenCryptography {
                     .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
                     .build()
 
-                biometricPrompt!!.authenticate(
-                    promptInfo!!,
-                    BiometricPrompt.CryptoObject(signature)
-                )
+                CoroutineScope(context = Dispatchers.Main).launch {
+                    biometricPrompt!!.authenticate(
+                        promptInfo!!,
+                        BiometricPrompt.CryptoObject(signature)
+                    )
+                }
             }
         }
     }
@@ -115,8 +122,8 @@ object HyphenCryptography {
         val pubKey = getPublicKey()
         val ecPubKey = pubKey as ECPublicKey
 
-        val x = ecPubKey.params.generator.affineX.toString(16)
-        val y = ecPubKey.params.generator.affineY.toString(16)
+        val x = ecPubKey.w.affineX.toString(16)
+        val y = ecPubKey.w.affineY.toString(16)
 
         return "$x$y"
     }
@@ -127,6 +134,11 @@ object HyphenCryptography {
 
         val privateKeyEntry = keyStore.getEntry(KEY_ALIAS, null) as? KeyStore.PrivateKeyEntry
         val privateKey = privateKeyEntry?.privateKey ?: return null
+
+        privateKey as ECKey
+
+        Timber.tag("HyphenCryptography")
+            .i("Privatekey bit length = ${privateKey.params.order.bitLength() / 8}")
 
         val signature = Signature.getInstance("SHA256withECDSA")
         signature.initSign(privateKey)
