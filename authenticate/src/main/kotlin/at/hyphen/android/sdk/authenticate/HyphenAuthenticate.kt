@@ -1,7 +1,9 @@
 package at.hyphen.android.sdk.authenticate
 
 import HyphenUserType
+import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.ProgressDialog
 import android.content.Context
 import android.os.Build
 import at.hyphen.android.sdk.core.Hyphen
@@ -22,6 +24,9 @@ import at.hyphen.android.sdk.networking.request.HyphenRequestSignIn2FA
 import at.hyphen.android.sdk.networking.request.HyphenRequestSignInChallenge
 import at.hyphen.android.sdk.networking.request.HyphenRequestSignInChallengeRespond
 import at.hyphen.android.sdk.networking.request.HyphenRequestSignUp
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.ktx.messaging
@@ -34,9 +39,14 @@ import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 
+@SuppressLint("StaticFieldLeak")
 object HyphenAuthenticate {
 
     private var account: HyphenAccount? = null
+
+    private var activity: Activity? = null
+
+    private var loadingDialog: ProgressDialog? = null
 
     suspend fun getAccount(context: Context): HyphenAccount {
         if (account != null) {
@@ -53,7 +63,19 @@ object HyphenAuthenticate {
 
     @OptIn(ExperimentalStdlibApi::class)
     suspend fun authenticate(activity: Activity, webClientId: String) {
+        FirebaseAuth.getInstance().signOut()
+        GoogleSignIn.getClient(activity, GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .signOut().addOnCompleteListener {
+
+            }
+
         val authCredential = HyphenGoogleAuthenticate.authenticate(activity, webClientId)
+
+        this.activity = activity
+        this.activity!!.runOnUiThread {
+            loadingDialog = ProgressDialog.show(this.activity!!, "", "Hyphen authenticating...")
+        }
+
         val authResult = Firebase.auth.signInWithCredential(authCredential.credential!!).await()
 
         Timber.tag("HyphenSDK").i("Add firebase user...")
@@ -85,7 +107,8 @@ object HyphenAuthenticate {
                     )
                 ).getOrThrow()
                 val challengeData = challengeRequest.challengeData
-                val challengeSignature = HyphenCryptography.signData(challengeData.toByteArray())?.toHexString()
+                val challengeSignature =
+                    HyphenCryptography.signData(challengeData.toByteArray())?.toHexString()
                 val challengeRespondRequest = HyphenNetworking.Auth.signInChallengeRespond(
                     payload = HyphenRequestSignInChallengeRespond(
                         challengeType = "deviceKey",
@@ -99,7 +122,8 @@ object HyphenAuthenticate {
                 account = challengeRespondRequest.account
                 Hyphen.saveCredential(challengeRespondRequest.credentials)
             } catch (e: Exception) {
-                Timber.tag("HyphenSDK").e("Request challenge failed. Attempting 2FA request for another device...")
+                Timber.tag("HyphenSDK")
+                    .e("Request challenge failed. Attempting 2FA request for another device...")
                 requestSignIn2FA(idToken = idToken, userKey = userKey)
             }
         }
@@ -131,22 +155,32 @@ object HyphenAuthenticate {
                 userKey = userKey,
             )
         ).suspendOnSuccess {
-            Timber.tag("HyphenSDK").i("Request Hyphen 2FA authenticate successfully. Please check your another device.")
+            Timber.tag("HyphenSDK")
+                .i("Request Hyphen 2FA authenticate successfully. Please check your another device.")
+
+            this@HyphenAuthenticate.activity!!.runOnUiThread {
+                loadingDialog?.setMessage("Request Hyphen 2FA authenticate successfully. Please check your another device.")
+            }
 
             HyphenEventBus.post(HyphenEventBusType.Show2FAWaitingProgressModal(show = true))
 
             val requestId = suspendCoroutine { continuation ->
-                HyphenEventBus.observe<HyphenEventBusType> {
+                HyphenEventBus.observe {
                     when (it) {
                         is HyphenEventBusType.TwoFactorAuthDenied -> {
                             Timber.tag("HyphenSDK").i("2FA denied")
-                            HyphenEventBus.removeObserver(HyphenEventBusType::class)
+
+                            this@HyphenAuthenticate.activity!!.runOnUiThread {
+                                loadingDialog?.hide()
+                                loadingDialog = null
+                            }
+
                             continuation.resumeWithException(HyphenSdkError.TwoFactorDenied)
                         }
 
                         is HyphenEventBusType.TwoFactorAuthApproved -> {
                             Timber.tag("HyphenSDK").i("2FA approved")
-                            HyphenEventBus.removeObserver(HyphenEventBusType::class)
+
                             continuation.resume(it.requestId)
                         }
 
@@ -163,9 +197,15 @@ object HyphenAuthenticate {
 
             account = result.account
             Hyphen.saveCredential(result.credentials)
+
+            this@HyphenAuthenticate.activity!!.runOnUiThread {
+                loadingDialog?.hide()
+                loadingDialog = null
+            }
         }.suspendOnError {
             if (errorBody?.string()?.contains("please sign up") == true) {
-                Timber.tag("HyphenSDK").i("Request Hyphen 2FA authenticate... - Failed -> Sign up needed")
+                Timber.tag("HyphenSDK")
+                    .i("Request Hyphen 2FA authenticate... - Failed -> Sign up needed")
                 Timber.tag("HyphenSDK").i("Request Hyphen Sign up...")
 
                 val result = HyphenNetworking.Auth.signUp(
@@ -179,6 +219,11 @@ object HyphenAuthenticate {
 
                 account = result.account
                 Hyphen.saveCredential(result.credentials)
+
+                this@HyphenAuthenticate.activity!!.runOnUiThread {
+                    loadingDialog?.hide()
+                    loadingDialog = null
+                }
             }
         }
     }
