@@ -1,5 +1,6 @@
 import org.gradle.api.tasks.Delete
 
+@Suppress("DSL_SCOPE_VIOLATION")
 plugins {
     alias(libs.plugins.androidGradlePlugin) apply false
     alias(libs.plugins.androidGradleLibraryPlugin) apply false

@@ -6,3 +6,7 @@ plugins {
 android {
     namespace = "at.hyphen.android.sdk.deviceinfo"
 }
+
+dependencies {
+    implementation(libs.androidxAnnotation)
+}

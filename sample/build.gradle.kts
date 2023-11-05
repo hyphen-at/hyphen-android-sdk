@@ -1,4 +1,3 @@
-@Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
     id("hyphen.sdk.android.application")
     id("hyphen.sdk.android.kotlin")
@@ -11,7 +10,6 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "at.hyphen.android.sdk.sample"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
@@ -23,6 +21,10 @@ android {
         }
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -30,11 +32,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
+        jvmTarget = JavaVersion.VERSION_11.toString()
     }
     packaging {
         resources {
@@ -44,7 +46,11 @@ android {
 }
 
 dependencies {
-    implementation(project(":core"))
-    implementation(project(":authenticate"))
-    implementation(project(":networking"))
+    implementation(projects.core)
+    implementation(projects.authenticate)
+    implementation(projects.networking)
+    implementation(projects.ui)
+
+    implementation(libs.timber)
+    implementation(libs.androidxAppCompat)
 }
