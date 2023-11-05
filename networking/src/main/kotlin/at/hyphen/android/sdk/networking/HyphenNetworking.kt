@@ -7,7 +7,6 @@ import at.hyphen.android.sdk.core.common.key.HyphenPublicKey
 import at.hyphen.android.sdk.networking.api.AccountAPI
 import at.hyphen.android.sdk.networking.api.AuthAPI
 import at.hyphen.android.sdk.networking.api.DeviceAPI
-import at.hyphen.android.sdk.networking.api.FlowChainRestAPI
 import at.hyphen.android.sdk.networking.api.KeyAPI
 import at.hyphen.android.sdk.networking.api.SignAPI
 import at.hyphen.android.sdk.networking.interceptor.HyphenHeaderInterceptor
@@ -20,13 +19,10 @@ import at.hyphen.android.sdk.networking.request.HyphenRequestSignIn2FA
 import at.hyphen.android.sdk.networking.request.HyphenRequestSignInChallenge
 import at.hyphen.android.sdk.networking.request.HyphenRequestSignInChallengeRespond
 import at.hyphen.android.sdk.networking.request.HyphenRequestSignUp
-import at.hyphen.android.sdk.networking.request.flowchain.FlowTransactionRequest
 import at.hyphen.android.sdk.networking.response.HyphenResponseSignIn
 import at.hyphen.android.sdk.networking.response.HyphenResponseSignIn2FA
 import at.hyphen.android.sdk.networking.response.HyphenResponseSignInChallenge
 import at.hyphen.android.sdk.networking.response.HyphenSignResult
-import at.hyphen.android.sdk.networking.response.flowchain.FlowBlock
-import at.hyphen.android.sdk.networking.response.flowchain.FlowTransactionResult
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.skydoves.sandwich.ApiResponse
 import com.skydoves.sandwich.adapters.ApiResponseCallAdapterFactory
@@ -117,8 +113,6 @@ object HyphenNetworking {
 
     private val signApiService = retrofit.create(SignAPI::class.java)
 
-    private val flowApiService = flowApiRetrofit.create(FlowChainRestAPI::class.java)
-
     object Account {
         suspend fun getAccount(): ApiResponse<HyphenAccount> =
             accountApiService.getMyAccount().mapSuccess { account }
@@ -148,7 +142,7 @@ object HyphenNetworking {
     object Device {
         suspend fun editDevice(
             publicKey: HyphenPublicKey,
-            payload: HyphenRequestEditDevice
+            payload: HyphenRequestEditDevice,
         ): ApiResponse<Unit> =
             deviceApiService.editDevice(publicKey = publicKey, requestPayload = payload)
 
@@ -177,15 +171,5 @@ object HyphenNetworking {
                     message = message
                 )
             )
-    }
-
-    object FlowOnChain {
-        suspend fun getLatestBlock(): ApiResponse<List<FlowBlock>> =
-            flowApiService.getLatestBlocks()
-
-        suspend fun postTransaction(
-            payload: FlowTransactionRequest,
-        ): ApiResponse<FlowTransactionResult> =
-            flowApiService.postTransactions(payload = payload)
     }
 }

@@ -23,13 +23,6 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven { url = uri("https://jitpack.io") }
-        maven {
-            url = uri("https://maven.pkg.github.com/TrustedDataFramework/java-rlp")
-            credentials {
-                username = localProperties["gpr.user"] as String? ?: System.getenv("USERNAME")
-                password = localProperties["gpr.key"] as String? ?: System.getenv("TOKEN")
-            }
-        }
     }
 }
 rootProject.name = "hyphen-android-sdk"

@@ -50,6 +50,7 @@ dependencies {
     implementation(projects.authenticate)
     implementation(projects.networking)
     implementation(projects.ui)
+    implementation(projects.flow)
 
     implementation(libs.timber)
     implementation(libs.androidxAppCompat)

@@ -6,12 +6,10 @@ import at.hyphen.android.sdk.networking.HyphenNetworking
 import com.nftco.flow.sdk.Flow
 import com.nftco.flow.sdk.FlowAddress
 import com.nftco.flow.sdk.FlowArgument
-import com.nftco.flow.sdk.FlowScript
 import com.nftco.flow.sdk.FlowSignature
-import com.nftco.flow.sdk.FlowTransaction
-import com.nftco.flow.sdk.FlowTransactionProposalKey
 import com.nftco.flow.sdk.bytesToHex
 import com.nftco.flow.sdk.crypto.Crypto
+import com.nftco.flow.sdk.flowTransaction
 import com.skydoves.sandwich.getOrThrow
 import okio.ByteString.Companion.decodeHex
 import okio.ByteString.Companion.toByteString
@@ -19,59 +17,65 @@ import timber.log.Timber
 
 object HyphenFlow {
 
+    internal val accessAPI = Flow.newAccessApi(
+        if (Hyphen.network == Hyphen.NetworkType.TESTNET)
+            "access.devnet.nodes.onflow.org" else
+            "access.mainnet.nodes.onflow.org",
+        9000
+    )
+
     /// @returns: TransactionId
     @OptIn(ExperimentalStdlibApi::class)
     suspend fun signAndSendTransaction(
         cadenceScript: String,
         arguments: List<FlowArgument>,
+        withAuthorizer: Boolean = true,
     ): String {
-        val accessAPI = Flow.newAccessApi(
-            if (Hyphen.network == Hyphen.NetworkType.TESTNET)
-                "access.devnet.nodes.onflow.org" else
-                "access.mainnet.nodes.onflow.org",
-            9000
-        )
 
         val hyphenAccount = HyphenNetworking.Account.getAccount().getOrThrow()
         val flowAddress = FlowAddress(hyphenAccount.addresses.first().address)
         val keys = HyphenNetworking.Key.getKeys().getOrThrow()
         val deviceKeyIndex =
             keys.first { it.publicKey == HyphenCryptography.getPublicKeyHex() }.keyIndex
-//        val deviceKeyIndex = 7
 
         val payMasterAddress =
             if (Hyphen.network == Hyphen.NetworkType.TESTNET) "0xe22cea2c515f26e6" else "0xd998bea00bb8d39c"
 
         val latestBlockId = accessAPI.getLatestBlockHeader().id
-        // val latestBlockId = getLatestBlockId().getOrThrow()
 
-        var payload = FlowTransaction(
-            script = FlowScript(cadenceScript.encodeToByteArray()),
-            arguments = arguments,
-            referenceBlockId = latestBlockId,
-            gasLimit = 9999,
-            proposalKey = FlowTransactionProposalKey(
-                address = flowAddress,
-                keyIndex = deviceKeyIndex,
-                sequenceNumber = 0,
-            ),
-            payerAddress = FlowAddress(payMasterAddress),
-            authorizers = listOf(flowAddress),
-        )
+        var payload = flowTransaction {
+            referenceBlockId(latestBlockId)
+            gasLimit(9999)
 
-        val serverKeySignData =
-            HyphenNetworking.Sign.signTransactionWithServerKey(
-                payload.canonicalPayload.toHexString()
-            ).getOrThrow().signature
+            script {
+                cadenceScript
+            }
+
+            arguments(arguments.toMutableList())
+
+            proposalKey {
+                address = flowAddress
+                keyIndex = getAccountKey(flowAddress, deviceKeyIndex).id
+                sequenceNumber = getAccountKey(flowAddress, deviceKeyIndex).sequenceNumber
+            }
+
+            payerAddress {
+                FlowAddress(payMasterAddress)
+            }
+
+            if (withAuthorizer) {
+                authorizers {
+                    address {
+                        flowAddress
+                    }
+                }
+            }
+        }
 
         val deviceKeyRawSignData =
-            HyphenCryptography.signData(payload.canonicalPayload)!!
-
-        payload = payload.addPayloadSignature(
-            address = FlowAddress(serverKeySignData.addr),
-            keyIndex = serverKeySignData.keyId.toInt(),
-            signature = FlowSignature(serverKeySignData.signature.decodeHex().toByteArray())
-        )
+            HyphenCryptography.signData(
+                normalize("FLOW-V0.0-transaction") + payload.canonicalPayload
+            )!!
 
         payload = payload.addPayloadSignature(
             address = flowAddress,
@@ -80,15 +84,26 @@ object HyphenFlow {
                 Crypto.normalizeSignature(
                     signature = deviceKeyRawSignData,
                     ecCoupleComponentSize = 32
-                )
+                ).toByteString().hex()
             )
+        )
+
+        val serverKeySignData =
+            HyphenNetworking.Sign.signTransactionWithServerKey(
+                (normalize("FLOW-V0.0-transaction") + payload.canonicalPayload).toHexString()
+            ).getOrThrow().signature
+
+        payload = payload.addPayloadSignature(
+            address = FlowAddress(serverKeySignData.addr),
+            keyIndex = serverKeySignData.keyId.toInt(),
+            signature = FlowSignature(hex = serverKeySignData.signature)
         )
 
         val payMasterKeySignData =
             HyphenNetworking.Sign.signTransactionWithPayMasterKey(
-                payload.canonicalPaymentEnvelope.toByteString().hex()
-            )
-                .getOrThrow().signature
+                (normalize("FLOW-V0.0-transaction") + payload.canonicalAuthorizationEnvelope).toByteString()
+                    .hex()
+            ).getOrThrow().signature
 
 
         payload = payload.addEnvelopeSignature(
@@ -98,9 +113,9 @@ object HyphenFlow {
         )
 
         val txId = accessAPI.sendTransaction(transaction = payload)
-
         Timber.tag("HyphenFlow").e(txId.bytes.bytesToHex())
+        waitForSeal(txId)
 
-        return ""
+        return txId.bytes.bytesToHex()
     }
 }
