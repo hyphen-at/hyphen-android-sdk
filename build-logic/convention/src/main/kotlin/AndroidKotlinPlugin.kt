@@ -26,7 +26,7 @@ class AndroidKotlinPlugin : Plugin<Project> {
                         "-Xcontext-receivers"
                     )
 
-                    jvmTarget = JavaVersion.VERSION_17.toString()
+                    jvmTarget = JavaVersion.VERSION_11.toString()
                 }
             }
             dependencies {
