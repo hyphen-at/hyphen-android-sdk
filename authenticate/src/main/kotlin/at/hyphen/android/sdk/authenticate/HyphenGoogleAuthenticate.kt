@@ -41,37 +41,33 @@ object HyphenGoogleAuthenticate {
             val delegator = activity as HyphenAuthenticateDelegate
 
             delegator.hyphenActivityResultCallback = { result ->
-                if (result.resultCode == Activity.RESULT_CANCELED) {
-                    continuation.resumeWithException(HyphenSdkError.GoogleAuthError)
-                } else {
-                    CoroutineScope(Dispatchers.IO).launch {
-                        val rst = try {
-                            GoogleSignIn.getSignedInAccountFromIntent(result.resultData).await()
-                        } catch (e: ApiException) {
-                            if (e.statusCode == GoogleSignInStatusCodes.CANCELED ||
-                                e.statusCode == GoogleSignInStatusCodes.SIGN_IN_CANCELLED
-                            ) {
-                                continuation.resumeWithException(HyphenSdkError.GoogleAuthError)
-                            } else {
-                                continuation.resumeWithException(e)
-                            }
-                            null
-                        } ?: return@launch
+                CoroutineScope(Dispatchers.IO).launch {
+                    val rst = try {
+                        GoogleSignIn.getSignedInAccountFromIntent(result.data).await()
+                    } catch (e: ApiException) {
+                        if (e.statusCode == GoogleSignInStatusCodes.CANCELED ||
+                            e.statusCode == GoogleSignInStatusCodes.SIGN_IN_CANCELLED
+                        ) {
+                            continuation.resumeWithException(HyphenSdkError.GoogleAuthError)
+                        } else {
+                            continuation.resumeWithException(e)
+                        }
+                        null
+                    } ?: return@launch
 
-                        val idToken = rst.idToken.let {
-                            if (it == null) {
-                                continuation.resumeWithException(NullPointerException("idToken == null"))
-                            }
+                    val idToken = rst.idToken.let {
+                        if (it == null) {
+                            continuation.resumeWithException(NullPointerException("idToken == null"))
+                        }
 
-                            it
-                        } ?: return@launch
+                        it
+                    } ?: return@launch
 
-                        val credential = GoogleAuthProvider.getCredential(idToken, null)
-                        val firebaseGoogleLoginResult =
-                            Firebase.auth.signInWithCredential(credential).await()
+                    val credential = GoogleAuthProvider.getCredential(idToken, null)
+                    val firebaseGoogleLoginResult =
+                        Firebase.auth.signInWithCredential(credential).await()
 
-                        continuation.resume(firebaseGoogleLoginResult)
-                    }
+                    continuation.resume(firebaseGoogleLoginResult)
                 }
             }
 
