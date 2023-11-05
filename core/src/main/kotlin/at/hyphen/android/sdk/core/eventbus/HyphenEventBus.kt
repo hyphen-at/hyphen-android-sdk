@@ -10,7 +10,9 @@ object HyphenEventBus {
     private var onEventReceived: ((HyphenEventBusType) -> Unit)? = null
 
     internal fun initialize() {
-        eventBus.register(this)
+        if (!eventBus.isRegistered(this)) {
+            eventBus.register(this)
+        }
     }
 
     fun post(event: HyphenEventBusType) {
