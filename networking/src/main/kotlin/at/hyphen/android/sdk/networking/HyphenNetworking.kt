@@ -7,6 +7,7 @@ import at.hyphen.android.sdk.core.common.key.HyphenPublicKey
 import at.hyphen.android.sdk.networking.api.AccountAPI
 import at.hyphen.android.sdk.networking.api.AuthAPI
 import at.hyphen.android.sdk.networking.api.DeviceAPI
+import at.hyphen.android.sdk.networking.api.FlowChainRestAPI
 import at.hyphen.android.sdk.networking.api.KeyAPI
 import at.hyphen.android.sdk.networking.api.SignAPI
 import at.hyphen.android.sdk.networking.interceptor.HyphenHeaderInterceptor
@@ -19,10 +20,13 @@ import at.hyphen.android.sdk.networking.request.HyphenRequestSignIn2FA
 import at.hyphen.android.sdk.networking.request.HyphenRequestSignInChallenge
 import at.hyphen.android.sdk.networking.request.HyphenRequestSignInChallengeRespond
 import at.hyphen.android.sdk.networking.request.HyphenRequestSignUp
+import at.hyphen.android.sdk.networking.request.flowchain.FlowTransactionRequest
 import at.hyphen.android.sdk.networking.response.HyphenResponseSignIn
 import at.hyphen.android.sdk.networking.response.HyphenResponseSignIn2FA
 import at.hyphen.android.sdk.networking.response.HyphenResponseSignInChallenge
 import at.hyphen.android.sdk.networking.response.HyphenSignResult
+import at.hyphen.android.sdk.networking.response.flowchain.FlowBlock
+import at.hyphen.android.sdk.networking.response.flowchain.FlowTransactionResult
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.skydoves.sandwich.ApiResponse
 import com.skydoves.sandwich.adapters.ApiResponseCallAdapterFactory
@@ -40,32 +44,68 @@ import retrofit2.Retrofit
 object HyphenNetworking {
 
     @OptIn(ExperimentalSerializationApi::class)
-    private val retrofit = Retrofit.Builder().apply {
-        client(
-            OkHttpClient.Builder().apply {
-                connectTimeout(Duration.ZERO)
-                writeTimeout(Duration.ZERO)
-                readTimeout(Duration.ZERO)
+    private val retrofit: Retrofit
+        get() = Retrofit.Builder().apply {
+            client(
+                OkHttpClient.Builder().apply {
+                    connectTimeout(Duration.ZERO)
+                    writeTimeout(Duration.ZERO)
+                    readTimeout(Duration.ZERO)
 
-                addInterceptor(
-                    HttpLoggingInterceptor().apply {
-                        level = HttpLoggingInterceptor.Level.BODY
-                    }
-                )
-                addInterceptor(HyphenHeaderInterceptor())
-            }.build()
-        )
+                    addInterceptor(
+                        HttpLoggingInterceptor().apply {
+                            level = HttpLoggingInterceptor.Level.BODY
+                        }
+                    )
+                    addInterceptor(HyphenHeaderInterceptor())
+                }.build()
+            )
 
-        baseUrl("https://api.dev.hyphen.at/")
-        addConverterFactory(
-            Json {
-                prettyPrint = true
-                ignoreUnknownKeys = true
-                explicitNulls = false
-            }.asConverterFactory("application/json".toMediaType())
-        )
-        addCallAdapterFactory(ApiResponseCallAdapterFactory.create())
-    }.build()
+            baseUrl(
+                if (Hyphen.network == Hyphen.NetworkType.TESTNET) "https://api.dev.hyphen.at/"
+                else "https://api.hyphen.at/"
+            )
+            addConverterFactory(
+                Json {
+                    prettyPrint = true
+                    ignoreUnknownKeys = true
+                    explicitNulls = false
+                }.asConverterFactory("application/json".toMediaType())
+            )
+            addCallAdapterFactory(ApiResponseCallAdapterFactory.create())
+        }.build()
+
+    @OptIn(ExperimentalSerializationApi::class)
+    private val flowApiRetrofit: Retrofit
+        get() = Retrofit.Builder().apply {
+            client(
+                OkHttpClient.Builder().apply {
+                    connectTimeout(Duration.ZERO)
+                    writeTimeout(Duration.ZERO)
+                    readTimeout(Duration.ZERO)
+
+                    addInterceptor(
+                        HttpLoggingInterceptor().apply {
+                            level = HttpLoggingInterceptor.Level.BODY
+                        }
+                    )
+                    addInterceptor(HyphenHeaderInterceptor())
+                }.build()
+            )
+
+            baseUrl(
+                if (Hyphen.network == Hyphen.NetworkType.TESTNET) "https://rest-testnet.onflow.org/"
+                else "https://rest-mainnet.onflow.org/"
+            )
+            addConverterFactory(
+                Json {
+                    prettyPrint = true
+                    ignoreUnknownKeys = true
+                    explicitNulls = false
+                }.asConverterFactory("application/json".toMediaType())
+            )
+            addCallAdapterFactory(ApiResponseCallAdapterFactory.create())
+        }.build()
 
     private val authApiService = retrofit.create(AuthAPI::class.java)
 
@@ -76,6 +116,8 @@ object HyphenNetworking {
     private val keyApiService = retrofit.create(KeyAPI::class.java)
 
     private val signApiService = retrofit.create(SignAPI::class.java)
+
+    private val flowApiService = flowApiRetrofit.create(FlowChainRestAPI::class.java)
 
     object Account {
         suspend fun getAccount(): ApiResponse<HyphenAccount> =
@@ -104,7 +146,10 @@ object HyphenNetworking {
     }
 
     object Device {
-        suspend fun editDevice(publicKey: HyphenPublicKey, payload: HyphenRequestEditDevice): ApiResponse<Unit> =
+        suspend fun editDevice(
+            publicKey: HyphenPublicKey,
+            payload: HyphenRequestEditDevice
+        ): ApiResponse<Unit> =
             deviceApiService.editDevice(publicKey = publicKey, requestPayload = payload)
 
         suspend fun retry2FA(id: String, payload: HyphenRequestRetry2FA): ApiResponse<Unit> =
@@ -127,6 +172,20 @@ object HyphenNetworking {
             signApiService.signTransactionWithServerKey(requestPayload = HyphenRequestSign(message = message))
 
         suspend fun signTransactionWithPayMasterKey(message: String): ApiResponse<HyphenSignResult> =
-            signApiService.signTransactionWithPayMasterKey(requestPayload = HyphenRequestSign(message = message))
+            signApiService.signTransactionWithPayMasterKey(
+                requestPayload = HyphenRequestSign(
+                    message = message
+                )
+            )
+    }
+
+    object FlowOnChain {
+        suspend fun getLatestBlock(): ApiResponse<List<FlowBlock>> =
+            flowApiService.getLatestBlocks()
+
+        suspend fun postTransaction(
+            payload: FlowTransactionRequest,
+        ): ApiResponse<FlowTransactionResult> =
+            flowApiService.postTransactions(payload = payload)
     }
 }
