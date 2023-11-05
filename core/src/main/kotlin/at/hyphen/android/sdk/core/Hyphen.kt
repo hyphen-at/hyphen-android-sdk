@@ -2,16 +2,26 @@ package at.hyphen.android.sdk.core
 
 import android.content.Context
 import androidx.annotation.RestrictTo
-import at.hyphen.android.sdk.core.common.account.HyphenAccount
+import androidx.fragment.app.FragmentActivity
 import at.hyphen.android.sdk.core.common.credential.HyphenCredential
+import at.hyphen.android.sdk.core.eventbus.HyphenEventBus
 import at.hyphen.android.sdk.core.preferences.HyphenSecurePreferences
+import java.lang.ref.WeakReference
 import timber.log.Timber
+
 
 object Hyphen {
 
-    private var hyphenAccount: HyphenAccount? = null
+    enum class NetworkType {
+        TESTNET,
+        MAINNET
+    }
 
     private var _appSecret: String = ""
+
+    var network: NetworkType = NetworkType.TESTNET
+
+    var currentActivity = WeakReference<FragmentActivity?>(null)
 
     var appSecret: String
         set(newValue) {
@@ -26,7 +36,8 @@ object Hyphen {
             return _appSecret
         }
 
-    fun initialize(context: Context, appSecret: String) {
+    fun initialize(context: Context) {
+        HyphenEventBus.initialize()
         HyphenSecurePreferences.initialize(context)
     }
 
