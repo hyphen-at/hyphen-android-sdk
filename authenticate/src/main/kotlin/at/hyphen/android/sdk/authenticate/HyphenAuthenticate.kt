@@ -30,13 +30,17 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.ktx.messaging
+import com.nftco.flow.sdk.crypto.Crypto
 import com.skydoves.sandwich.getOrThrow
 import com.skydoves.sandwich.suspendOnError
 import com.skydoves.sandwich.suspendOnSuccess
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
+import okio.ByteString.Companion.toByteString
 import timber.log.Timber
 
 @SuppressLint("StaticFieldLeak")
@@ -101,27 +105,38 @@ object HyphenAuthenticate {
                         request = HyphenRequestSignInChallenge.Request(
                             method = "firebase",
                             token = idToken,
-                            chainName = "flow-testnet",
+                            chainName = if (Hyphen.network == Hyphen.NetworkType.TESTNET) "flow-testnet" else "flow-mainnet",
                         ),
                         publicKey = userKey.publicKey.orEmpty(),
                     )
                 ).getOrThrow()
                 val challengeData = challengeRequest.challengeData
-                val challengeSignature =
-                    HyphenCryptography.signData(challengeData.toByteArray())?.toHexString()
+
+                val challengeSignature = runBlocking(Dispatchers.Main) {
+                    Crypto.normalizeSignature(
+                        signature = HyphenCryptography.signData(challengeData.toByteArray())!!,
+                        ecCoupleComponentSize = 32,
+                    )
+                }
                 val challengeRespondRequest = HyphenNetworking.Auth.signInChallengeRespond(
                     payload = HyphenRequestSignInChallengeRespond(
                         challengeType = "deviceKey",
                         challengeData = challengeData,
                         deviceKey = HyphenRequestSignInChallengeRespond.DeviceKey(
-                            signature = "0x${challengeSignature.orEmpty()}"
+                            signature = challengeSignature.toByteString().hex()
                         )
                     )
                 ).getOrThrow()
 
                 account = challengeRespondRequest.account
                 Hyphen.saveCredential(challengeRespondRequest.credentials)
+
+                this@HyphenAuthenticate.activity!!.runOnUiThread {
+                    loadingDialog?.hide()
+                    loadingDialog = null
+                }
             } catch (e: Exception) {
+                e.printStackTrace()
                 Timber.tag("HyphenSDK")
                     .e("Request challenge failed. Attempting 2FA request for another device...")
                 requestSignIn2FA(idToken = idToken, userKey = userKey)
@@ -150,7 +165,7 @@ object HyphenAuthenticate {
                 request = HyphenRequestSignIn2FA.Request(
                     method = "firebase",
                     token = idToken,
-                    chainName = "flow-testnet",
+                    chainName = if (Hyphen.network == Hyphen.NetworkType.TESTNET) "flow-testnet" else "flow-mainnet",
                 ),
                 userKey = userKey,
             )
@@ -212,7 +227,7 @@ object HyphenAuthenticate {
                     payload = HyphenRequestSignUp(
                         method = "firebase",
                         token = idToken,
-                        chainName = "flow-testnet",
+                        chainName = if (Hyphen.network == Hyphen.NetworkType.TESTNET) "flow-testnet" else "flow-mainnet",
                         userKey = userKey,
                     )
                 ).getOrThrow()
