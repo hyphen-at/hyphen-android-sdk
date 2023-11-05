@@ -1,5 +1,6 @@
 [versions]
 androidGradlePlugin = "8.1.2"
+grpcOkhttp = "1.59.0"
 kotlin = "1.9.10"
 
 androidxCore = "1.12.0"
@@ -9,7 +10,7 @@ composeMaterial3 = "1.2.0-alpha10"
 composeHiltNavigatiaon = "1.0.0"
 androidxLifecycle = "2.6.2"
 androidxActivity = "1.8.0"
-androidxFragment = "1.6.1"
+androidxFragment = "1.7.0-alpha06"
 kotlinxCoroutines = "1.7.3"
 accompanist = "0.30.1"
 kotlinxSerialization = "1.6.0"
@@ -21,6 +22,7 @@ androidxLifecycleProcess = "2.6.2"
 
 [libraries]
 androidGradlePlugin = { group = "com.android.tools.build", name = "gradle", version.ref = "androidGradlePlugin" }
+grpc-okhttp = { module = "io.grpc:grpc-okhttp", version.ref = "grpcOkhttp" }
 kotlinGradlePlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 firebaseGradlePlugin = { module = "com.google.gms:google-services", version = "4.4.0" }
 kotlinxSerializationGradlePlugin = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
@@ -53,12 +55,15 @@ composeHiltNavigtation = { module = "androidx.hilt:hilt-navigation-compose", ver
 composeLintCheck = { module = "com.slack.lint.compose:compose-lint-checks", version = "1.2.0" }
 animation-graphics-android = { group = "androidx.compose.animation", name = "animation-graphics-android", version = "1.5.4" }
 
-androidxFragment = { module = "androidx.fragment:fragment", version.ref = "androidxFragment" }
+androidxAnnotation = { module = "androidx.annotation:annotation", version = "1.7.0" }
+androidxFragment = { module = "androidx.fragment:fragment-ktx", version.ref = "androidxFragment" }
 androidxCoreKtx = { module = "androidx.core:core-ktx", version.ref = "androidxCore" }
 androidxAppCompat = { module = "androidx.appcompat:appcompat", version = "1.7.0-alpha03" }
 androidxLifecycleLifecycleRuntimeKtx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidxLifecycle" }
 androidxActivityActivityCompose = { module = "androidx.activity:activity-compose", version.ref = "androidxActivity" }
 androidxDatastoreDatastorePreferences = { module = "androidx.datastore:datastore-preferences-core", version = "1.1.0-alpha05" }
+androidxSecurity = { module = "androidx.security:security-crypto-ktx", version = "1.1.0-alpha06" }
+androidxActivity = { module = "androidx.activity:activity-ktx", version = "1.8.0" }
 androidxBrowser = { module = "androidx.browser:browser", version = "1.6.0" }
 androidxWindow = { module = "androidx.window:window", version = "1.1.0" }
 
@@ -72,11 +77,27 @@ retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit
 serializationConverter = { module = "com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter", version = "1.0.0" }
 sandwich = { module = "com.github.skydoves:sandwich", version.ref = "sandwich" }
 
+# RLP
+rlp = { module = "org.tdf:rlp", version = "1.1.20" }
+
+# biometric
+androidxBiometric = { module = "androidx.biometric:biometric-ktx", version = "1.2.0-alpha05" }
+
 # Firebase
 firebaseBom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebaseCommon = { module = "com.google.firebase:firebase-common" }
 firebaseAuth = { module = "com.google.firebase:firebase-auth" }
 firebaseMessaging = { module = "com.google.firebase:firebase-messaging" }
+googleAuth = { module = "com.google.android.gms:play-services-auth", version = "20.7.0" }
+
+# Logger
+timber = { module = "com.jakewharton.timber:timber", version = "5.0.1" }
+
+# eventbus
+eventbus = { module = "org.greenrobot:eventbus", version = "3.3.1" }
+
+# flow
+flow = { module = "com.nftco:flow-jvm-sdk", version = "0.7.3" }
 
 [plugins]
 androidGradlePlugin = { id = "com.android.application", version.ref = "androidGradlePlugin" }
@@ -84,7 +105,7 @@ androidGradleLibraryPlugin = { id = "com.android.library", version.ref = "androi
 kotlinGradlePlugin = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 
 [bundles]
-networking = ["okHttpCore", "okHttpLoggingInterceptor", "retrofit", "serializationConverter"]
+networking = ["okHttpCore", "okHttpLoggingInterceptor", "retrofit", "serializationConverter", "kotlinSerializationJson"]
 plugins = [
     "androidGradlePlugin",
     "kotlinGradlePlugin",
