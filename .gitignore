@@ -86,3 +86,6 @@ Temporary Items
 ### Visual Studio Code
 .history
 .ionide
+
+# Google Services
+google-services.json
