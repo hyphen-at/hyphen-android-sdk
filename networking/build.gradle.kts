@@ -11,7 +11,7 @@ mavenPublishing {
     coordinates(
         "at.hyphen",
         artifactId,
-        "1.0.0-alpha05"
+        "1.0.0-alpha06"
     )
 
     pom {

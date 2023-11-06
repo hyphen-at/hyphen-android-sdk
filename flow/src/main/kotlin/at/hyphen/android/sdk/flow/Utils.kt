@@ -25,6 +25,7 @@ internal fun normalize(tag: String): ByteArray {
 }
 
 fun getTransactionResult(txID: FlowId): FlowTransactionResult {
+    FlowId("")
     val txResult = HyphenFlow.accessAPI.getTransactionResultById(txID)!!
     if (txResult.errorMessage.isNotEmpty()) {
         throw Exception(txResult.errorMessage)
