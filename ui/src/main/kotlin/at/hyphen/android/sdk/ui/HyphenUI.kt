@@ -45,7 +45,7 @@ object HyphenUI {
                     prettyPrint = true
                     ignoreUnknownKeys = true
                     explicitNulls = false
-                }.decodeFromString<HyphenResponseSignIn2FA>(hyphenData.orEmpty())
+                }.decodeFromString<HyphenResponseSignIn2FA>(hyphenData)
             pendingTwoFactorStatus = twoFactorRequest.twoFactorAuth
 
             val intent = Intent(context, Hyphen2FAActivity::class.java)
@@ -57,7 +57,7 @@ object HyphenUI {
                     prettyPrint = true
                     ignoreUnknownKeys = true
                     explicitNulls = false
-                }.decodeFromString<HyphenResponseSignIn2FA>(hyphenData.orEmpty())
+                }.decodeFromString<HyphenResponseSignIn2FA>(hyphenData)
             HyphenEventBus.post(HyphenEventBusType.Show2FAWaitingProgressModal(show = false))
 
             if (twoFactorRequest.twoFactorAuth.status == Hyphen2FAStatusType.APPROVED) {
